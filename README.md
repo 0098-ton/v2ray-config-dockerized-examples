@@ -45,6 +45,7 @@ and route inbounds to our v2ray vmess server as outbound , client setup can be d
  CONTAINER ID   IMAGE            COMMAND                  CREATED       STATUS        PORTS                                                                                        NAMES
  2a454b4cd5ca   v2ray/official   "v2ray -config=/etc/…"   5 weeks ago   Up 34 hours   0.0.0.0:443->443/tcp, 0.0.0.0:443->443/udp, 0.0.0.0:2080->2080/tcp, 0.0.0.0:2080->2080/udp, 0.0.0.0:22233->22233/tcp, 0.0.0.0:22233->22233/udp v2ray
  ```
+## OR  
 #### setup using v2ray-core
 
  1. download [v2ray binary ](https://github.com/v2fly/v2ray-core/releases/tag/v4.31.0) based on your os extract it and put it in PATH.
@@ -60,10 +61,12 @@ and route inbounds to our v2ray vmess server as outbound , client setup can be d
  $ v2ray -c PATH_TO_V2CONFIG_JSON
  ```
  NOTE: if you are running on wsl, run it with sudo for better port mapping
- 
+
  now you have a ready v2ray client instance that accepts shadowsocks on port 443 , http-proxy on port 2080 and a dokodemo-door on port 22233.
 
  ## tips and v2ray config explanation:
+
+ ### CAUTION: if you did edit the v2config anywhere dont forget to restart the v2ray docker.
 
  for changing inbounds configuration and credentials , simply just edit client/v2cnfig.json inbounds section.
  for example in this setup http-proxy url will be http://user:password@V2RAY_CLIENT_IP:2080 and V2RAY_CLIENT_IP can be 127.0.0.1, localhost or any ip that you see the v2ray core.
@@ -150,3 +153,96 @@ and add the output in v2ray v2config.json like below:
 ```
 
 NOTE: dont forget to pick unique alterId for clients and also it must be the same in client and config for each client
+
+## ALSO
+
+there are more ways to achieve this goal by configuring the v2ray docker client on a seperate machine from clients,
+
+then add more http-proxy , shadowsocks, ... on the v2ray client and assign them to users
+
+for http-proxy:
+```
+        {
+            "listen": "0.0.0.0",
+            "port": 1080,
+            "protocol": "http",
+            "settings": {
+                "udp": true,
+                "accounts": [
+                    {
+                        "user": "user",
+                        "pass": "password"
+                    },
+                    {
+                        "user": "user2",
+                        "pass": "password2"
+                    },
+                    .
+                    .
+                    .
+                ]
+            }
+        },
+
+```
+also for http-proxy you can have multiple interface by adding:
+
+```
+        {
+            "listen": "0.0.0.0",
+            "port": 2080,
+            "protocol": "http",
+            "settings": {
+                "udp": true,
+                "accounts": [
+                    {
+                        "user": "user",
+                        "pass": "password"
+                    }
+                ]
+            }
+        },
+        {
+            "listen": "0.0.0.0",
+            "port": 2081,
+            "protocol": "http",
+            "settings": {
+                "udp": true,
+                "accounts": [
+                    {
+                        "user": "user",
+                        "pass": "password"
+                    }
+                ]
+            }
+        },
+        .
+        .
+        .
+```
+NOTE: dont forget to assign unique ports to multiple interfaces.
+
+and for shadowsocks:
+```
+        {
+            "port": 443,
+            "protocol": "shadowsocks",
+            "settings": {
+                "method": "aes-256-gcm",
+                "password": "password",
+                "level": 1
+            }
+        },
+        {
+            "port": 444,
+            "protocol": "shadowsocks",
+            "settings": {
+                "method": "aes-256-gcm",
+                "password": "password2",
+                "level": 1
+            }
+        },
+
+```
+NOTE: dont forget to assign unique ports to multiple interfaces.
+
